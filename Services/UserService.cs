@@ -33,9 +33,15 @@ namespace sinves.Services
             var options = new CreateIndexOptions { Unique= true };
             var index = new BsonDocument { { user.Username, user.Username } };
             var model = new CreateIndexModel<User>(index, options);
+            try
+            {
+                await _userCollection.Indexes.CreateOneAsync(model);
+                await _userCollection.InsertOneAsync(user);
 
-            await _userCollection.Indexes.CreateOneAsync(model);
-            await _userCollection.InsertOneAsync(user);
+            } catch(Exception ex)
+            {
+                throw new Exception("Username exists");
+            }
         }
  }
 }
