@@ -20,6 +20,7 @@ namespace sinves.Services
 
             _userCollection = mongoDatabase.GetCollection<User>(
                 databaseSettings.Value.UserCollection);
+
         }
 
         public async Task<User> GetAsync(string getUsername) =>
@@ -30,18 +31,20 @@ namespace sinves.Services
             await InsertUniqueUser(newUser);
         private async Task InsertUniqueUser(User user)
         {
-            var options = new CreateIndexOptions { Unique= true };
-            var index = new BsonDocument { { user.Username, user.Username } };
+            var options = new CreateIndexOptions { Unique = true };
+            var index = new BsonDocument().Add("username", 1);
             var model = new CreateIndexModel<User>(index, options);
             try
             {
                 await _userCollection.Indexes.CreateOneAsync(model);
                 await _userCollection.InsertOneAsync(user);
-
-            } catch(Exception ex)
+            } catch (Exception ex)
             {
-                throw new Exception("Username exists");
+                throw new Exception("Username is taken");
             }
+            
+           
+
         }
  }
 }

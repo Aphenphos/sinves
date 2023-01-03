@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using sinves.Models;
 using sinves.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace sinves.Controllers
 
@@ -12,15 +16,17 @@ namespace sinves.Controllers
     public class UserController : Controller
     {
         private readonly UserService _userService;
-        public UserController(UserService userService) =>
+        public UserController(UserService userService)
+            {
             _userService = userService;
+            }
+
 
         [HttpPost("signup")]
         public async Task<IActionResult> Post(UserDto newUser)
         {
             User user = new User();
             CreatePasswordHash(newUser.password, out byte[] passwordHash, out byte[] passwordSalt);
-
             user.PasswordSalt= passwordSalt;
             user.PasswordHash= passwordHash;
             user.Username= newUser.username;
@@ -43,7 +49,8 @@ namespace sinves.Controllers
 
             if(VerifyPasswordHash(userInfo.password, fromDB.PasswordHash, fromDB.PasswordSalt) == true)
             {
-                return Ok("Token");
+                var token = GenerateJwtToken(fromDB);
+                return Ok(token);
             } else
             {
                 return BadRequest("Invalid Login");
@@ -68,6 +75,33 @@ namespace sinves.Controllers
                 return testHash.SequenceEqual(passwordHash);
             }
 
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+
+            byte[] key = Encoding.UTF8.GetBytes("wmuLnCwLvGKtC0NDAPkQ");
+
+            var tokenDescriptor = new SecurityTokenDescriptor()
+            {
+                Subject = new System.Security.Claims.ClaimsIdentity(new[]
+                {
+                    new Claim("Id", user.Id),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Username),
+                    new Claim(JwtRegisteredClaimNames.Name, value:user.Username),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString())
+                }),
+
+                Expires = DateTime.Now.AddHours(1).ToUniversalTime(),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+            };
+
+            var token = jwtTokenHandler.CreateToken(tokenDescriptor);
+            var jwtToken = jwtTokenHandler.WriteToken(token);
+
+       return jwtToken;
         }
     }
 }
