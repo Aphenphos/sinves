@@ -18,10 +18,11 @@ namespace sinves.Controllers
         public BusinessController(BusinessService businessService) =>
             _businessService = businessService;
 
+        [AllowAnonymous]
         [HttpGet("getAll")]
         public async Task<List<Business>> Get() =>
             await _businessService.GetAsync();
-
+        [AllowAnonymous]
         [HttpGet("get/{id:length(24)}")]
         public async Task<ActionResult<Business>> Get(string id)
         {
@@ -34,7 +35,7 @@ namespace sinves.Controllers
 
             return business;
         }
-
+        //Create a getbysearch(category and name at same time)
         [HttpPost("post/")]
         public async Task<IActionResult> Post(Business newBusiness)
         {
