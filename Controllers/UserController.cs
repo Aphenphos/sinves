@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using sinves.Models;
 using sinves.Services;
 using System.IdentityModel.Tokens.Jwt;
@@ -40,21 +41,44 @@ namespace sinves.Controllers
         public async Task<IActionResult> SignIn(UserDto userInfo)
         {
 
-            User fromDB =  _userService.GetAsync(userInfo.username).Result;
-            
-            if (!(userInfo.username == fromDB.Username))
+            try
             {
-                return BadRequest("Invalid Username");
-            }
+            User fromDB= _userService.GetAsync(userInfo.username).Result;
+                if (fromDB != null)
+                {
+                    if (!(userInfo.username == fromDB.Username))
+                    {
+                        return BadRequest("Invalid Username");
+                    }
 
-            if(VerifyPasswordHash(userInfo.password, fromDB.PasswordHash, fromDB.PasswordSalt) == true)
+                    if (VerifyPasswordHash(userInfo.password, fromDB.PasswordHash, fromDB.PasswordSalt) == true)
+                    {
+                        var token = GenerateJwtToken(fromDB);
+                        Response.Cookies.Append("JWT", token, new CookieOptions()
+                        {
+                            HttpOnly = true,
+                            //Change samesite mode in prod
+                            SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None,
+                            Secure= true
+                        }) ;
+
+                        
+                        return Ok();
+                    }
+                    else
+                    {
+                        return BadRequest("Invalid Login");
+                    }
+                } else
+                {
+                    throw new Exception("Invalid Login");
+                }
+
+            } catch(Exception ex)
             {
-                var token = GenerateJwtToken(fromDB);
-                return Ok(token);
-            } else
-            {
-                return BadRequest("Invalid Login");
+                return BadRequest("Authentication Error");
             }
+            
         }
 
 
