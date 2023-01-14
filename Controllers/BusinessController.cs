@@ -36,12 +36,12 @@ namespace sinves.Controllers
             return business;
         }
         //Create a getbysearch(category and name at same time)
-        [HttpPost("post/")]
+        [HttpPost("post")]
         public async Task<IActionResult> Post(Business newBusiness)
         {
             await _businessService.CreateAsync(newBusiness);
 
-            return CreatedAtAction(nameof(Get), new { id = newBusiness.Id }, newBusiness);
+            return Ok();
         }
 
         [HttpPut("update/{id:length(24)}")]

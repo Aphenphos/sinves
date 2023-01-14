@@ -30,25 +30,32 @@ builder.Services.AddAuthentication(options =>
             RequireExpirationTime = false, //in dev will need refresh token for prod (ideally)
             ValidateLifetime = true
         };
+        jwt.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies["JWT"];
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddSingleton<BusinessService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
-
+app.UseCors(x => x
+    .WithOrigins("http://127.0.0.1:3000")
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowCredentials()
+    );
 // Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-//cors setup for dev only
-app.UseCors(x => x
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .SetIsOriginAllowed(origin => true)
-    .AllowCredentials()
-    );
+
 
 app.MapControllers();
 
