@@ -18,15 +18,19 @@ builder.Services.AddAuthentication(options =>
 })
     .AddJwtBearer(jwt =>
     {
-        byte[] key = Encoding.ASCII.GetBytes("wmuLnCwLvGKtC0NDAPkQ");
-
+        var keystr = builder.Configuration["JWT:Key"];
+        var vIssuer = builder.Configuration["JWT:Issuer"];
+        var vAudience = builder.Configuration["JWT:Audience"];
+        byte[] key = Encoding.ASCII.GetBytes(keystr);
         jwt.SaveToken = true;
         jwt.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false, //in dev
-            ValidateAudience = false, //in dev
+            ValidateIssuer = true,
+            ValidIssuer = vIssuer,
+            ValidateAudience = true,
+            ValidAudience = vAudience,
             RequireExpirationTime = false, //in dev will need refresh token for prod (ideally)
             ValidateLifetime = true
         };

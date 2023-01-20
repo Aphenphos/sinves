@@ -14,9 +14,7 @@ namespace sinves.Models
         public String name { get; set; }
         public String[] categories { get; set; }
         public String[]? links { get; set; }
-
         public String[]? imageLinks { get; set; } = null!;
-
-
+        public String hours { get; set; } = null!;
     }
 }

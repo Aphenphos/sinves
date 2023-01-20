@@ -17,9 +17,12 @@ namespace sinves.Controllers
     public class UserController : Controller
     {
         private readonly UserService _userService;
-        public UserController(UserService userService)
+        private readonly IConfiguration _configuration;
+
+        public UserController(UserService userService, IConfiguration configuration)
             {
             _userService = userService;
+            _configuration = configuration;
             }
 
 
@@ -113,9 +116,12 @@ namespace sinves.Controllers
                 {
                     new Claim("Id", user.Id),
                     new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-                    new Claim(JwtRegisteredClaimNames.Name, value:user.Username),
+                    new Claim(JwtRegisteredClaimNames.Name, value: user.Username),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString())
+                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Aud, _configuration["JWT:Audience"]),
+                    new Claim(JwtRegisteredClaimNames.Iss, _configuration["JWT:Issuer"])
+
                 }),
 
                 Expires = DateTime.Now.AddHours(1).ToUniversalTime(),
