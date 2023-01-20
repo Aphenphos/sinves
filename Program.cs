@@ -49,7 +49,7 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 app.UseCors(x => x
-    .WithOrigins("http://127.0.0.1:3000")
+    .WithOrigins(builder.Configuration["JWT:Audience"])
     .AllowAnyMethod()
     .AllowAnyHeader()
     .AllowCredentials()
